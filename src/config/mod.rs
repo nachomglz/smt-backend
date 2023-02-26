@@ -16,8 +16,8 @@ impl managed::Manager for PoolManager {
     type Error = mongodb::error::Error;
 
     async fn create(&self) -> Result<mongodb::Client, mongodb::error::Error> {
-        let CONN_STR = std::env::var("CONN_STR").unwrap();
-        let mut client_options = ClientOptions::parse(CONN_STR).await?;
+        let conn_str = std::env::var("CONN_STR").unwrap();
+        let mut client_options = ClientOptions::parse(conn_str).await?;
         client_options.app_name = Some("smt-backend".to_owned());
         client_options.default_database = Some("smt-backend".to_owned());
         Ok(mongodb::Client::with_options(client_options)?)

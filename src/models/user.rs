@@ -1,4 +1,4 @@
-use mongodb::bson::Bson;
+use mongodb::bson::oid::ObjectId;
 use mongodb::options::{FindOneOptions, InsertOneOptions};
 use mongodb::{self, bson::doc};
 use rocket::serde::json::Json;
@@ -13,9 +13,16 @@ use crate::{
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct User {
-    id: Option<Bson>,
+    #[serde(rename = "_id")]
+    id: Option<ObjectId>,
     name: String,
     email: String,
+}
+
+impl User {
+    pub fn get_id(self) -> ObjectId {
+        self.id.unwrap()
+    }
 }
 
 #[derive(Debug)]
@@ -62,7 +69,7 @@ pub async fn signup(db_pool: &State<Pool>, user: Json<User>) -> Response<CustomR
     let options = InsertOneOptions::builder().build();
     let result = collection.insert_one(&new_user, options).await.unwrap();
 
-    new_user.id = Some(result.inserted_id);
+    new_user.id = Some(result.inserted_id.as_object_id().unwrap());
 
     CustomResponse::new()
         .data(Some(new_user))
