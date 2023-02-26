@@ -7,5 +7,7 @@ pub mod user;
 pub mod user_time;
 
 pub fn mount(rocket: rocket::Rocket<Build>) -> rocket::Rocket<Build> {
-    rocket.mount("/api/user", rocket::routes![user::login, user::signup])
+    rocket
+        .mount("/api/user", rocket::routes![user::login, user::signup])
+        .mount("/api/team", rocket::routes![team::new])
 }
