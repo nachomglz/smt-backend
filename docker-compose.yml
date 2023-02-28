@@ -3,9 +3,9 @@ version: '3.8'
 services:
   mongo:
     image: mongo:latest
-    container_name: "smt-mongo-dev"
+    container_name: "smt_db"
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=root
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_ROOT_PASSWORD}
     ports:
       - 27017:27017
