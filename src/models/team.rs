@@ -9,6 +9,7 @@ use super::user::User;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Team {
+    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
     id: Option<ObjectId>,
     name: String,
     users: Vec<ObjectId>,
@@ -48,6 +49,46 @@ pub async fn new(db_pool: &State<Pool>, team: Json<Team>) -> Response<CustomResp
                 .respond()
         }
         Err(_) => CustomResponse::new()
+            .status(ResponseStatus::NotFound)
+            .build()
+            .respond(),
+    }
+}
+
+#[rocket::get("/<team_id>")]
+pub async fn get(db_pool: &State<Pool>, team_id: String) -> Response<CustomResponse<Team>> {
+    let db = db_pool.get().await.unwrap();
+    let collection = db.default_database().unwrap().collection::<Team>("teams");
+
+    let team_id: Option<ObjectId> = match ObjectId::parse_str(team_id) {
+        Ok(result) => Some(result),
+        Err(_) => None,
+    };
+
+    match team_id {
+        Some(team_id) => {
+            let result = collection
+                .find_one(
+                    doc! {
+                        "_id": team_id
+                    },
+                    None,
+                )
+                .await
+                .unwrap();
+            match result {
+                Some(team) => CustomResponse::new()
+                    .status(ResponseStatus::Success)
+                    .data(Some(team))
+                    .build()
+                    .respond(),
+                None => CustomResponse::new()
+                    .status(ResponseStatus::NotFound)
+                    .build()
+                    .respond(),
+            }
+        }
+        None => CustomResponse::new()
             .status(ResponseStatus::NotFound)
             .build()
             .respond(),
