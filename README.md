@@ -21,3 +21,6 @@ $ cargo run
 
 ## Changelog
 See [Changelog](./CHANGELOG.md)
+
+## Todo list
+See [Todo List](./TODO.md)
