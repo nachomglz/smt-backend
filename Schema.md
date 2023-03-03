@@ -1,0 +1,32 @@
+```JSON
+{
+  "Users":{
+    "name":"xxxx",
+    "_id":"xx-xx-xx",
+    "email":"", //username
+  }
+  "Times-of-users":{
+    "user_id":"xxx",
+    "time":"xxxx",
+    "daily_id":"xxxx"
+  },
+  "Meeting-config":{
+    "_id":"xxxx",
+    "team_id":"xxxx",
+    "desired_duration":"xxxx",
+    "meeting_name":"xxxx",
+    "description":"xxxx",
+    "meeting_type":"RETRO | DAILY"
+  },
+  "Meeting-Instance":{
+    "meeting_id":"xxx",
+    "duration":"xxx",
+    "date":"xxxxx",
+  },
+  "Team":{
+    "team_id":"xxxx",
+    "name":"xxxx",
+    "users":["xxxx","xxxx"]
+  }
+}
+```
