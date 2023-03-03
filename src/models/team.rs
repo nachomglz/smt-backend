@@ -1,8 +1,8 @@
 use crate::config::Pool;
-use crate::utils::responders::{CustomResponse, Response, ResponseStatus};
+use crate::utils::responders::Response;
 use mongodb::bson::{doc, oid::ObjectId};
-use rocket::serde::json::Json;
 use rocket::State;
+use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
 
 use super::user::User;
@@ -16,7 +16,7 @@ pub struct Team {
 }
 
 #[rocket::post("/new", format = "json", data = "<team>")]
-pub async fn new(db_pool: &State<Pool>, team: Json<Team>) -> Response<CustomResponse<Team>> {
+pub async fn new(db_pool: &State<Pool>, team: Json<Team>) -> Result<Response<Team>, Status> {
     let db = db_pool.get().await.unwrap();
     let collection = db.default_database().unwrap().collection::<Team>("teams");
     let user_collection = db.default_database().unwrap().collection::<User>("users");
@@ -24,7 +24,6 @@ pub async fn new(db_pool: &State<Pool>, team: Json<Team>) -> Response<CustomResp
     let mut new_team: Team = team.0.clone();
     let mut new_team_users: Vec<ObjectId> = vec![];
 
-    // Check if users exists, if so, add them
     for provided_user in team.0.clone().users {
         let exists = user_collection
             .find_one(doc! { "_id": provided_user }, None)
@@ -37,60 +36,34 @@ pub async fn new(db_pool: &State<Pool>, team: Json<Team>) -> Response<CustomResp
 
     new_team.users = new_team_users;
 
-    // insert new team
-    let result = collection.insert_one(&new_team, None).await;
-    match result {
-        Ok(result) => {
-            new_team.id = Some(result.inserted_id.as_object_id().unwrap());
-            CustomResponse::new()
-                .data(Some(new_team))
-                .status(ResponseStatus::Success)
-                .build()
-                .respond()
-        }
-        Err(_) => CustomResponse::new()
-            .status(ResponseStatus::NotFound)
-            .build()
-            .respond(),
-    }
+    let result = collection.insert_one(&new_team, None).await.unwrap();
+    new_team.id = Some(result.inserted_id.as_object_id().unwrap());
+
+    Ok(Response::Created(Json(new_team)))
 }
 
 #[rocket::get("/<team_id>")]
-pub async fn get(db_pool: &State<Pool>, team_id: String) -> Response<CustomResponse<Team>> {
+pub async fn get(db_pool: &State<Pool>, team_id: String) -> Result<Response<Team>, Status> {
     let db = db_pool.get().await.unwrap();
     let collection = db.default_database().unwrap().collection::<Team>("teams");
 
-    let team_id: Option<ObjectId> = match ObjectId::parse_str(team_id) {
-        Ok(result) => Some(result),
-        Err(_) => None,
+    let team_id: ObjectId = match ObjectId::parse_str(team_id) {
+        Ok(result) => result,
+        Err(_) => return Err(Status::UnprocessableEntity),
     };
 
-    match team_id {
-        Some(team_id) => {
-            let result = collection
-                .find_one(
-                    doc! {
-                        "_id": team_id
-                    },
-                    None,
-                )
-                .await
-                .unwrap();
-            match result {
-                Some(team) => CustomResponse::new()
-                    .status(ResponseStatus::Success)
-                    .data(Some(team))
-                    .build()
-                    .respond(),
-                None => CustomResponse::new()
-                    .status(ResponseStatus::NotFound)
-                    .build()
-                    .respond(),
-            }
-        }
-        None => CustomResponse::new()
-            .status(ResponseStatus::NotFound)
-            .build()
-            .respond(),
+    let result = collection
+        .find_one(
+            doc! {
+                "_id": team_id
+            },
+            None,
+        )
+        .await
+        .unwrap();
+
+    match result {
+        Some(team) => Ok(Response::Success(Json(team))),
+        None => Err(Status::NotFound),
     }
 }
