@@ -1,3 +1,11 @@
+# [03-03-2023] 0.1.3
+## Added
+
+- Health checker for the DB
+- New user routes: 
+    - Get user
+    - Update user
+
 # [28-02-2023] 0.1.2
 ## Added
 
