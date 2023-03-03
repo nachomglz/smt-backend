@@ -10,7 +10,13 @@ pub fn mount(rocket: rocket::Rocket<Build>) -> rocket::Rocket<Build> {
     rocket
         .mount(
             "/api/user",
-            routes![user::login, user::signup, user::get, user::update],
+            routes![
+                user::login,
+                user::signup,
+                user::get,
+                user::update,
+                user::delete
+            ],
         )
         .mount("/api/team", routes![team::new, team::get])
 }

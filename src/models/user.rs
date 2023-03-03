@@ -1,8 +1,7 @@
 use mongodb::bson::oid::ObjectId;
-use mongodb::options::{FindOneAndUpdateOptions, FindOneOptions, InsertOneOptions, ReturnDocument};
+use mongodb::options::{FindOneAndUpdateOptions, FindOneOptions, ReturnDocument};
 use mongodb::{self, bson::doc};
 use rocket::http::Status;
-use rocket::serde::json::serde_json::json;
 use rocket::serde::json::Json;
 use rocket::State;
 use serde::{Deserialize, Serialize};
@@ -127,5 +126,26 @@ pub async fn update(
     match result {
         Some(new_user) => Ok(Response::Success(Json(new_user))),
         None => Err(Status::NotFound),
+    }
+}
+
+#[rocket::delete("/<user_id>")]
+pub async fn delete(db_pool: &State<Pool>, user_id: String) -> Result<Response<User>, Status> {
+    let db = db_pool.get().await.unwrap().default_database().unwrap();
+    let collection = db.collection::<User>("users");
+
+    let user_id = match ObjectId::parse_str(user_id) {
+        Ok(user_id) => user_id,
+        Err(_) => return Err(Status::UnprocessableEntity),
+    };
+
+    let result = collection
+        .find_one_and_delete(doc! { "_id": user_id }, None)
+        .await
+        .unwrap();
+
+    match result {
+        Some(user) => Ok(Response::Success(Json(user))),
+        None => Err(Status::Conflict),
     }
 }
