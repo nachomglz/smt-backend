@@ -22,3 +22,11 @@ pub async fn check_db_working() {
         }
     }
 }
+
+pub async fn get_collection<T>(
+    db_pool: &rocket::State<crate::config::Pool>,
+    name: &str,
+) -> mongodb::Collection<T> {
+    let db = db_pool.get().await.unwrap().default_database().unwrap();
+    db.collection::<T>(name)
+}

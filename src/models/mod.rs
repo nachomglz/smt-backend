@@ -18,5 +18,8 @@ pub fn mount(rocket: rocket::Rocket<Build>) -> rocket::Rocket<Build> {
                 user::delete
             ],
         )
-        .mount("/api/team", routes![team::new, team::get])
+        .mount(
+            "/api/team",
+            routes![team::new, team::get, team::update, team::get_users],
+        )
 }

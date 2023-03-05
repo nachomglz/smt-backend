@@ -1,3 +1,14 @@
+# [05-03-2023] 0.1.5
+## Added
+
+- Route to get the users inside a team
+- Route to update team (only the name)
+
+## Fixed
+
+- When you add the same user multiple times it will only add once
+
+
 # [03-03-2023] 0.1.4
 ## Added
 
