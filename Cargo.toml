@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 serde = "1.0.152"
-chrono = {version = "0.4.23", feature = ["serde"]}
+chrono = {version = "0.4.23", features = ["serde"]}
 rocket = { version = "0.5.0-rc.2", features = ["json"] }
 deadpool = "0.9.5"
 mongodb = "2.3.1"

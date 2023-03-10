@@ -1,10 +1,10 @@
 use crate::utils::db::get_collection;
+use crate::{config::Pool, utils::responders::Response};
+use chrono::serde::ts_milliseconds;
 use chrono::{DateTime, Utc};
 use mongodb::bson::oid::ObjectId;
 use rocket::{self, http::Status, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
-
-use crate::{config::Pool, utils::responders::Response};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Meeting {
@@ -13,7 +13,7 @@ pub struct Meeting {
     /// Real duration of the meeting
     duration: u16,
     /// Date and time when the meeting started
-    #[serde(with = "bson::serde_helpers::chrono_datetime_as_bson_datetime")]
+    #[serde(with = "ts_milliseconds")]
     date_utc: DateTime<Utc>,
 }
 
