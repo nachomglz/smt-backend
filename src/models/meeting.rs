@@ -1,4 +1,4 @@
-use crate::utils;
+use crate::utils::db::get_collection;
 use chrono::{DateTime, Utc};
 use mongodb::bson::oid::ObjectId;
 use rocket::{self, http::Status, serde::json::Json, State};
@@ -22,7 +22,7 @@ pub async fn new(
     db_pool: &State<Pool>,
     meeting: Json<Meeting>,
 ) -> Result<Response<Meeting>, Status> {
-    let collection = utils::db::get_collection::<Meeting>(db_pool, "meetings").await;
+    let collection = get_collection::<Meeting>(db_pool, "meetings").await;
 
     let mut new_meeting = meeting.0.clone();
 
@@ -39,4 +39,10 @@ pub async fn new(
             Err(Status::InternalServerError)
         }
     }
+}
+
+#[rocket::get("/<meeting_id>")]
+pub async fn get(db_pool: &State<Pool>, meeting_id: String) -> Result<Response<Meeting>, Status> {
+    let collection = get_collection::<Meeting>(db_pool, "meetings").await;
+    todo!()
 }
