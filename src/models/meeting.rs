@@ -1,7 +1,9 @@
 use crate::utils::db::get_collection;
 use crate::{config::Pool, utils::responders::Response};
+use bson::doc;
 use chrono::serde::ts_milliseconds;
 use chrono::{DateTime, Utc};
+use deadpool::managed::Object;
 use mongodb::bson::oid::ObjectId;
 use rocket::{self, http::Status, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
@@ -44,5 +46,24 @@ pub async fn new(
 #[rocket::get("/<meeting_id>")]
 pub async fn get(db_pool: &State<Pool>, meeting_id: String) -> Result<Response<Meeting>, Status> {
     let collection = get_collection::<Meeting>(db_pool, "meetings").await;
-    todo!()
+
+    let meeting_id = match ObjectId::parse_str(meeting_id) {
+        Ok(id) => id,
+        Err(_) => return Err(Status::UnprocessableEntity),
+    };
+
+    let result = collection
+        .find_one(
+            doc! {
+                "_id": meeting_id
+            },
+            None,
+        )
+        .await
+        .unwrap();
+
+    match result {
+        Some(meeting) => Ok(Response::Success(Json(meeting))),
+        None => Err(Status::NotFound),
+    }
 }
