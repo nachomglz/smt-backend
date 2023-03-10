@@ -1,9 +1,9 @@
+use super::team::Team;
 use crate::utils::db::get_collection;
-use bson::oid::ObjectId;
+use crate::{config::Pool, utils::responders::Response};
+use bson::{doc, oid::ObjectId};
 use rocket::{http::Status, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
-
-use crate::{config::Pool, utils::responders::Response};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum MeetingType {
@@ -43,16 +43,45 @@ pub async fn new(
     meeting_config: Json<MeetingConfig>,
 ) -> Result<Response<MeetingConfig>, Status> {
     let collection = get_collection::<MeetingConfig>(db_pool, "meeting_configs").await;
+    let team_collection = get_collection::<Team>(db_pool, "teams").await;
 
     let mut new_config = meeting_config.0.clone();
 
-    let result = collection.insert_one(&new_config, None).await;
+    // Check if the team_id exists
+    let team_id = match ObjectId::parse_str(&new_config.team_id) {
+        Ok(id) => id,
+        Err(_) => return Err(Status::UnprocessableEntity),
+    };
 
-    match result {
-        Ok(result) => {
-            new_config.id = Some(result.inserted_id.as_object_id().unwrap());
-            Ok(Response::Created(Json(new_config)))
+    let result = team_collection
+        .find_one(
+            doc! {
+                "_id": team_id
+            },
+            None,
+        )
+        .await
+        .unwrap();
+
+    println!(
+        "result: {:?} \n filter: {:?}",
+        result,
+        doc! {
+            "_id": team_id
         }
-        Err(_) => Err(Status::InternalServerError),
+    );
+
+    if let Some(_) = result {
+        let result = collection.insert_one(&new_config, None).await;
+
+        match result {
+            Ok(result) => {
+                new_config.id = Some(result.inserted_id.as_object_id().unwrap());
+                Ok(Response::Created(Json(new_config)))
+            }
+            Err(_) => Err(Status::InternalServerError),
+        }
+    } else {
+        Err(Status::NotFound)
     }
 }
