@@ -3,7 +3,6 @@ use crate::{config::Pool, utils::responders::Response};
 use bson::doc;
 use chrono::serde::ts_milliseconds;
 use chrono::{DateTime, Utc};
-use deadpool::managed::Object;
 use mongodb::bson::oid::ObjectId;
 use rocket::{self, http::Status, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
