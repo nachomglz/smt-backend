@@ -1,5 +1,6 @@
+use crate::utils::db::get_collection;
 use mongodb::bson::oid::ObjectId;
-use mongodb::options::{FindOneAndUpdateOptions, FindOneOptions, ReturnDocument};
+use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use mongodb::{self, bson::doc};
 use rocket::http::Status;
 use rocket::serde::json::Json;
@@ -36,12 +37,10 @@ pub async fn login(
     db_pool: &State<Pool>,
     email: Json<LoginRequestBody>,
 ) -> Result<Response<User>, Status> {
-    let db = db_pool.get().await.unwrap();
-    let collection = db.default_database().unwrap().collection::<User>("users");
-    let find_options = FindOneOptions::builder().build();
+    let collection = get_collection::<User>(db_pool, "users").await;
 
     let user = collection
-        .find_one(doc! {"email": email.0.email}, find_options)
+        .find_one(doc! {"email": email.0.email}, None)
         .await
         .unwrap();
 
@@ -54,8 +53,7 @@ pub async fn login(
 #[rocket::post("/signup", format = "json", data = "<user>")]
 pub async fn signup(db_pool: &State<Pool>, user: Json<User>) -> Result<Response<User>, Status> {
     let mut new_user = user.0.clone();
-    let db = db_pool.get().await.unwrap();
-    let collection = db.default_database().unwrap().collection::<User>("users");
+    let collection = get_collection::<User>(db_pool, "users").await;
 
     // check if the email is already registered
     let registered: bool = collection
@@ -77,8 +75,7 @@ pub async fn signup(db_pool: &State<Pool>, user: Json<User>) -> Result<Response<
 
 #[rocket::get("/<user_id>", format = "json")]
 pub async fn get(db_pool: &State<Pool>, user_id: String) -> Result<Response<User>, Status> {
-    let db = db_pool.get().await.unwrap();
-    let collection = db.default_database().unwrap().collection::<User>("users");
+    let collection = get_collection::<User>(db_pool, "users").await;
 
     let user_id = match ObjectId::parse_str(user_id) {
         Ok(user_id) => user_id,
@@ -102,8 +99,7 @@ pub async fn update(
     user_id: String,
     user: Json<User>,
 ) -> Result<Response<User>, Status> {
-    let db = db_pool.get().await.unwrap();
-    let collection = db.default_database().unwrap().collection::<User>("users");
+    let collection = get_collection::<User>(db_pool, "users").await;
 
     let user_id = match ObjectId::parse_str(user_id) {
         Ok(user_id) => user_id,
@@ -131,8 +127,7 @@ pub async fn update(
 
 #[rocket::delete("/<user_id>")]
 pub async fn delete(db_pool: &State<Pool>, user_id: String) -> Result<Response<User>, Status> {
-    let db = db_pool.get().await.unwrap().default_database().unwrap();
-    let collection = db.collection::<User>("users");
+    let collection = get_collection::<User>(db_pool, "users").await;
 
     let user_id = match ObjectId::parse_str(user_id) {
         Ok(user_id) => user_id,

@@ -1,6 +1,5 @@
 use crate::config::Pool;
-use crate::utils::db::get_collection;
-use crate::utils::responders::Response;
+use crate::utils::{db::get_collection, responders::Response};
 use mongodb::bson::{doc, oid::ObjectId};
 use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use rocket::State;
@@ -19,9 +18,8 @@ pub struct Team {
 
 #[rocket::post("/new", format = "json", data = "<team>")]
 pub async fn new(db_pool: &State<Pool>, team: Json<Team>) -> Result<Response<Team>, Status> {
-    let db = db_pool.get().await.unwrap();
-    let collection = db.default_database().unwrap().collection::<Team>("teams");
-    let user_collection = db.default_database().unwrap().collection::<User>("users");
+    let collection = get_collection::<Team>(db_pool, "teams").await;
+    let user_collection = get_collection::<User>(db_pool, "users").await;
 
     let mut new_team: Team = team.0.clone();
     let mut new_team_users: Vec<ObjectId> = vec![];
@@ -51,8 +49,7 @@ pub async fn new(db_pool: &State<Pool>, team: Json<Team>) -> Result<Response<Tea
 
 #[rocket::get("/<team_id>")]
 pub async fn get(db_pool: &State<Pool>, team_id: String) -> Result<Response<Team>, Status> {
-    let db = db_pool.get().await.unwrap();
-    let collection = db.default_database().unwrap().collection::<Team>("teams");
+    let collection = get_collection::<Team>(db_pool, "teams").await;
 
     let team_id: ObjectId = match ObjectId::parse_str(team_id) {
         Ok(result) => result,
@@ -81,8 +78,7 @@ pub async fn update(
     team_id: String,
     team: Json<Team>,
 ) -> Result<Response<Team>, Status> {
-    let db = db_pool.get().await.unwrap().default_database().unwrap();
-    let collection = db.collection::<Team>("teams");
+    let collection = get_collection::<Team>(db_pool, "teams").await;
 
     let team_id = match ObjectId::parse_str(team_id) {
         Ok(team_id) => team_id,
