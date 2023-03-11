@@ -1,3 +1,28 @@
+# [05-03-2023] 0.1.5
+## Added
+
+- Route to get the users inside a team
+- Route to update team (only the name)
+
+## Fixed
+
+- When you add the same user multiple times it will only add once
+
+
+# [03-03-2023] 0.1.4
+## Added
+
+- New user routes: 
+    - Delete route
+
+# [03-03-2023] 0.1.3
+## Added
+
+- Health checker for the DB
+- New user routes: 
+    - Get user
+    - Update user
+
 # [28-02-2023] 0.1.2
 ## Added
 

@@ -7,4 +7,4 @@ This is a list of things that are going to be soonly implemented
     - [x] Responses are Results, meaning we can use the `?` operator to return `500` errors
 
 ## Features
-- [ ] Check if DB is available before running the API
+- [x] Check if DB is available before running the API
