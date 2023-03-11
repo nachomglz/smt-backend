@@ -1,3 +1,9 @@
+# [11-03-2023] 0.1.6
+## Added
+
+- Full CRUD for meeting configs
+
+
 # [05-03-2023] 0.1.5
 ## Added
 
