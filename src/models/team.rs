@@ -16,8 +16,8 @@ pub struct Team {
     users: Option<Vec<ObjectId>>,
 }
 
-#[rocket::post("/new", format = "json", data = "<team>")]
-pub async fn new(db_pool: &State<Pool>, team: Json<Team>) -> Result<Response<Team>, Status> {
+#[rocket::post("/", format = "json", data = "<team>")]
+pub async fn create(db_pool: &State<Pool>, team: Json<Team>) -> Result<Response<Team>, Status> {
     let collection = get_collection::<Team>(db_pool, "teams").await;
     let user_collection = get_collection::<User>(db_pool, "users").await;
 

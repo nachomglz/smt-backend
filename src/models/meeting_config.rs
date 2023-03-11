@@ -37,8 +37,8 @@ pub struct MeetingConfig {
     meeting_type: MeetingType,
 }
 
-#[rocket::post("/new", format = "json", data = "<meeting_config>")]
-pub async fn new(
+#[rocket::post("/", format = "json", data = "<meeting_config>")]
+pub async fn create(
     db_pool: &State<Pool>,
     meeting_config: Json<MeetingConfig>,
 ) -> Result<Response<MeetingConfig>, Status> {
@@ -83,5 +83,28 @@ pub async fn new(
         }
     } else {
         Err(Status::NotFound)
+    }
+}
+
+#[rocket::get("/<meeting_config_id>")]
+pub async fn get(
+    db_pool: &State<Pool>,
+    meeting_config_id: String,
+) -> Result<Response<MeetingConfig>, Status> {
+    let collection = get_collection::<MeetingConfig>(db_pool, "meeting_configs").await;
+
+    let meeting_config_id = match ObjectId::parse_str(meeting_config_id) {
+        Ok(id) => id,
+        Err(_) => return Err(Status::UnprocessableEntity),
+    };
+
+    let result = collection
+        .find_one(doc! { "_id": meeting_config_id }, None)
+        .await
+        .unwrap();
+
+    match result {
+        Some(meeting) => Ok(Response::Success(Json(meeting))),
+        None => Err(Status::NotFound),
     }
 }

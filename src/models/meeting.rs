@@ -18,8 +18,8 @@ pub struct Meeting {
     date_utc: DateTime<Utc>,
 }
 
-#[rocket::post("/new", format = "json", data = "<meeting>")]
-pub async fn new(
+#[rocket::post("/", format = "json", data = "<meeting>")]
+pub async fn create(
     db_pool: &State<Pool>,
     meeting: Json<Meeting>,
 ) -> Result<Response<Meeting>, Status> {
