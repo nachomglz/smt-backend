@@ -28,7 +28,8 @@ pub fn mount(rocket: rocket::Rocket<Build>) -> rocket::Rocket<Build> {
             routes![
                 meeting_config::create,
                 meeting_config::get,
-                meeting_config::update
+                meeting_config::update,
+                meeting_config::delete
             ],
         )
 }

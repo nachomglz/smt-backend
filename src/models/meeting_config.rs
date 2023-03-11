@@ -173,3 +173,31 @@ pub async fn update(
         Err(Status::NotFound)
     }
 }
+
+#[rocket::delete("/<meeting_config_id>")]
+pub async fn delete(
+    db_pool: &State<Pool>,
+    meeting_config_id: String,
+) -> Result<Response<MeetingConfig>, Status> {
+    let collection = get_collection::<MeetingConfig>(db_pool, "meeting_configs").await;
+
+    let meeting_config_id = match ObjectId::parse_str(meeting_config_id) {
+        Ok(id) => id,
+        Err(_) => return Err(Status::UnprocessableEntity),
+    };
+
+    let result = collection
+        .find_one_and_delete(
+            doc! {
+                "_id": meeting_config_id
+            },
+            None,
+        )
+        .await
+        .unwrap();
+
+    match result {
+        Some(meeting_config) => Ok(Response::Success(Json(meeting_config))),
+        None => Err(Status::NotFound),
+    }
+}
