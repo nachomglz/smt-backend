@@ -2,6 +2,7 @@ mod config;
 mod models;
 mod utils;
 
+#[allow(unused)]
 pub async fn run_api() -> Result<(), rocket::Error> {
     let mut rocket = rocket::build();
     rocket = models::mount(rocket);
@@ -14,6 +15,5 @@ pub async fn run_api() -> Result<(), rocket::Error> {
         .unwrap();
 
     rocket.manage(pool).launch().await?;
-
     Ok(())
 }

@@ -14,6 +14,7 @@ pub enum MeetingType {
 }
 
 impl MeetingType {
+    #[allow(dead_code)]
     fn value(&self) -> &str {
         match self {
             MeetingType::DAILY => "DAILY",
