@@ -70,12 +70,32 @@ pub async fn create(
             Ok(result) => {
                 let id = result.inserted_id.as_object_id().unwrap();
                 new_user_time.id = Some(id);
-                Ok(Response::Success(Json(new_user_time)))
+                Ok(Response::Created(Json(new_user_time)))
             }
             Err(_) => Err(Status::InternalServerError)
         }
     } else {
         Err(Status::NotFound)
+    }
+
+}
+
+#[rocket::get("/<user_time_id>")]
+pub async fn get(db_pool: &State<Pool>, user_time_id: String) -> Result<Response<UserTime>, Status> {
+    let collection = get_collection::<UserTime>(db_pool, "user_times").await;
+
+    let user_time_id = match ObjectId::parse_str(user_time_id) {
+        Ok(id) => id,
+        Err(_) => return Err(Status::UnprocessableEntity)
+    };
+
+    let user_time = collection.find_one(doc! {
+        "_id": user_time_id
+    }, None).await.unwrap();
+
+    match user_time {
+        Some(user_time) => Ok(Response::Success(Json(user_time))),
+        None => Err(Status::NotFound)
     }
 
 }
