@@ -3,14 +3,15 @@ use crate::{
     utils::{db::get_collection, responders::Response},
     models::{user::User, meeting::Meeting},
 };
-use bson::{doc, oid::ObjectId};
+use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
+use bson::{doc, oid::ObjectId, to_bson};
 use rocket::{http::Status, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 
 #[allow(dead_code)]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UserTime {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
     id: Option<ObjectId>,
     /// User Id
     user_id: Option<ObjectId>,
@@ -97,6 +98,83 @@ pub async fn get(db_pool: &State<Pool>, user_time_id: String) -> Result<Response
         Some(user_time) => Ok(Response::Success(Json(user_time))),
         None => Err(Status::NotFound)
     }
+
+}
+
+#[rocket::put("/<user_time_id>", format = "json", data = "<user_time>")]
+pub async fn update(
+    db_pool: &State<Pool>,
+    user_time_id: String,
+    user_time: Json<UserTime>
+) -> Result<Response<UserTime>, Status> {
+    let collection = get_collection::<UserTime>(db_pool, "user_times").await;
+    let user_collection = get_collection::<User>(db_pool, "user_times").await;
+    let meeting_collection = get_collection::<Meeting>(db_pool, "user_times").await;
+
+    let mut new_user_time = user_time.0.clone();
+
+    let user_time_id = match ObjectId::parse_str(user_time_id) {
+        Ok(id) => id,
+        Err(_) => return Err(Status::UnprocessableEntity)
+    };
+
+    new_user_time.user_id = match ObjectId::parse_str(&new_user_time.user_id_str.unwrap()) {
+        Ok(id) => Some(id),
+        Err(_) => return Err(Status::UnprocessableEntity)
+    };
+    new_user_time.meeting_id = match ObjectId::parse_str(&new_user_time.meeting_id_str.unwrap()) {
+        Ok(id) => Some(id),
+        Err(_) => return Err(Status::UnprocessableEntity)
+    };
+
+    // Check if the new user and meeting exist
+    let exists_user = user_collection
+        .find_one(doc! { "_id": &new_user_time.user_id.unwrap() }, None)
+        .await
+        .unwrap();
+    let exists_meeting = meeting_collection
+        .find_one(doc! { "_id": &new_user_time.meeting_id.unwrap()}, None)
+        .await
+        .unwrap();
+
+    println!("Exists user with id: {} ? -> {:?}", &new_user_time.user_id.unwrap(), exists_user);
+    println!("Exists meeting with id: {} ? -> {:?}", &new_user_time.meeting_id.unwrap(), exists_meeting);
+
+    /*
+    if exists_user && exists_meeting {
+        let opts = FindOneAndUpdateOptions::builder()
+            .return_document(Some(ReturnDocument::After))
+            .build();
+
+        let result = collection
+            .find_one_and_update(
+                doc! {
+                    "_id": &new_user_time.id.unwrap()
+                },
+                doc! {
+                    "$set": {
+                        "user_id": &new_user_time.user_id.unwrap(),
+                        "meeting_id": &new_user_time.meeting_id.unwrap(),
+                        "time": to_bson(&new_user_time.time).unwrap()
+                    }
+                },
+                opts
+            )
+        .await
+        .unwrap();
+
+        if let Some(user_time) = result {
+            Ok(Response::Success(Json(user_time)))
+        } else {
+            Err(Status::NotFound)
+        }
+
+    } else {
+        Err(Status::NotFound)
+    }
+    */
+    todo!()
+
 
 }
 

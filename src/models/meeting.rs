@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 pub struct Meeting {
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
     id: Option<ObjectId>,
-    /// Real duration of the meeting
+    /// Real duration of the meeting in seconds (max 65535)
     duration: u16,
     /// Date and time when the meeting started
     #[serde(with = "ts_milliseconds")]
