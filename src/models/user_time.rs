@@ -189,3 +189,24 @@ pub async fn update(
     }
 
 }
+
+#[rocket::delete("/<user_time_id>")]
+pub async fn delete(db_pool: &State<Pool>, user_time_id: String) -> Result<Response<UserTime>, Status> {
+    let collection = get_collection::<UserTime>(db_pool, "user_times").await;
+
+    let user_time_id = match ObjectId::parse_str(user_time_id) {
+        Ok(id) => id,
+        Err(_) => return Err(Status::UnprocessableEntity)
+    };
+
+    let result = collection
+        .find_one_and_delete(doc! { "_id": user_time_id }, None)
+        .await
+        .unwrap();
+
+    match result {
+        Some(user_time) => Ok(Response::Success(Json(user_time))),
+        None => Err(Status::Conflict)
+    }
+
+}

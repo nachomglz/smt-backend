@@ -32,5 +32,13 @@ pub fn mount(rocket: rocket::Rocket<Build>) -> rocket::Rocket<Build> {
                 meeting_config::delete
             ],
         )
-        .mount("/api/user_time", routes![user_time::create, user_time::get, user_time::update])
+        .mount(
+            "/api/user_time",
+            routes![
+                user_time::create,
+                user_time::get,
+                user_time::update,
+                user_time::delete
+            ],
+        )
 }
