@@ -1,3 +1,10 @@
+# [26-03-2023] 0.1.7
+
+## Added
+
+- Finished CRUD for user_time's
+
+
 # [11-03-2023] 0.1.6
 ## Added
 
@@ -5,6 +12,7 @@
 
 
 # [05-03-2023] 0.1.5
+
 ## Added
 
 - Route to get the users inside a team
@@ -16,12 +24,14 @@
 
 
 # [03-03-2023] 0.1.4
+
 ## Added
 
 - New user routes: 
     - Delete route
 
 # [03-03-2023] 0.1.3
+
 ## Added
 
 - Health checker for the DB
@@ -30,6 +40,7 @@
     - Update user
 
 # [28-02-2023] 0.1.2
+
 ## Added
 
 - Login route
@@ -39,6 +50,7 @@
 
 
 # [18-02-2023] 0.1.1
+
 ## Added
 
 - Setup rocket runtime
@@ -46,6 +58,7 @@
 
 
 # [18-02-2023] 0.1.0
+
 ## Added
 
 - Created project
