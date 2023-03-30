@@ -5,6 +5,7 @@ use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use rocket::State;
 use rocket::{http::Status, serde::json::Json};
 use serde::{Deserialize, Serialize};
+use futures::TryStreamExt;
 
 use super::user::User;
 
@@ -138,3 +139,18 @@ pub async fn get_users(db_pool: &State<Pool>, team_id: String) -> Result<Json<Ve
         None => Err(Status::NotFound),
     }
 }
+
+#[rocket::get("/all")]
+pub async fn all(db_pool: &State<Pool>) -> Result<Json<Vec<Team>>, Status> {
+    let collection = get_collection::<Team>(db_pool, "teams").await;
+
+    let teams = collection.find(doc! {}, None).await.unwrap().try_collect::<Vec<Team>>().await;
+
+    match teams {
+        Ok(teams) => Ok(Json(teams)),
+        Err(_) => Err(Status::InternalServerError)
+    }
+
+}
+
+

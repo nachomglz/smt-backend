@@ -1,3 +1,5 @@
+use rocket_cors::{CorsOptions, AllowedOrigins, Cors};
+
 mod config;
 mod models;
 mod utils;
@@ -13,7 +15,15 @@ pub async fn run_api() -> Result<(), rocket::Error> {
         .max_size(16)
         .build()
         .unwrap();
+    
+    // configure CORS
+    let cors: Cors = CorsOptions::default()
+        .allowed_origins(AllowedOrigins::all())
+        .allow_credentials(true)
+        .to_cors()
+        .unwrap();
 
-    rocket.manage(pool).launch().await?;
+    rocket.attach(cors).manage(pool).launch().await?;
+
     Ok(())
 }

@@ -20,7 +20,13 @@ pub fn mount(rocket: rocket::Rocket<Build>) -> rocket::Rocket<Build> {
         )
         .mount(
             "/api/team",
-            routes![team::create, team::get, team::update, team::get_users],
+            routes![
+                team::create,
+                team::get,
+                team::update,
+                team::get_users,
+                team::all
+            ],
         )
         .mount("/api/meeting", routes![meeting::create, meeting::get])
         .mount(
