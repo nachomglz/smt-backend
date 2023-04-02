@@ -2,6 +2,7 @@ use super::team::Team;
 use crate::utils::db::get_collection;
 use crate::{config::Pool, utils::responders::Response};
 use bson::{doc, oid::ObjectId};
+use futures::TryStreamExt;
 use mongodb::bson::to_bson;
 use mongodb::options::{FindOneAndUpdateOptions, ReturnDocument};
 use rocket::{http::Status, serde::json::Json, State};
@@ -36,7 +37,7 @@ pub struct MeetingConfig {
     /// Time in seconds that the meeting should last at maximum
     desired_duration: i64,
     /// Name of the meeting (ex: Pandora Daily)
-    meeting_name: String,
+    config_name: String,
     /// Description of the meeting
     description: String,
     /// Type of the meeting (RETRO | DAILY)
@@ -52,38 +53,30 @@ pub async fn create(
     let team_collection = get_collection::<Team>(db_pool, "teams").await;
 
     let mut new_config = meeting_config.0.clone();
-    if let Some(new_team_id) = &new_config.team_id_str {
-        new_config.team_id = Some(match ObjectId::parse_str(new_team_id) {
-            Ok(id) => id,
-            Err(_) => return Err(Status::UnprocessableEntity),
-        });
 
-        // Check if the team with the `team_id` provided exists
-        let result = team_collection
-            .find_one(
-                doc! {
-                    "_id": new_config.team_id.unwrap()
-                },
-                None,
-            )
-            .await
-            .unwrap();
+    // Check if the team with the `team_id` provided exists
+    let result = team_collection
+        .find_one(
+            doc! {
+                "_id": new_config.team_id.unwrap()
+            },
+            None,
+        )
+        .await
+        .unwrap();
 
-        if let Some(_) = result {
-            let result = collection.insert_one(&new_config, None).await;
+    if let Some(_) = result {
+        let result = collection.insert_one(&new_config, None).await;
 
-            match result {
-                Ok(result) => {
-                    new_config.id = Some(result.inserted_id.as_object_id().unwrap());
-                    Ok(Response::Created(Json(new_config)))
-                }
-                Err(_) => Err(Status::InternalServerError),
+        match result {
+            Ok(result) => {
+                new_config.id = Some(result.inserted_id.as_object_id().unwrap());
+                Ok(Response::Created(Json(new_config)))
             }
-        } else {
-            Err(Status::NotFound)
+            Err(_) => Err(Status::InternalServerError),
         }
     } else {
-        Err(Status::UnprocessableEntity)
+        Err(Status::NotFound)
     }
 }
 
@@ -149,7 +142,7 @@ pub async fn update(
                     "$set": {
                         "team_id": &new_meeting_config.team_id.unwrap(),
                         "desired_duration": to_bson(&new_meeting_config.desired_duration).unwrap(),
-                        "meeting_name": &new_meeting_config.meeting_name,
+                        "config_name": &new_meeting_config.config_name,
                         "description": &new_meeting_config.description,
                         "meeting_type": &new_meeting_config.meeting_type
                     }
@@ -200,5 +193,17 @@ pub async fn delete(
     match result {
         Some(meeting_config) => Ok(Response::Success(Json(meeting_config))),
         None => Err(Status::NotFound),
+    }
+}
+
+#[rocket::get("/all")]
+pub async fn all(db_pool: &State<Pool>) -> Result<Json<Vec<MeetingConfig>>, Status> {
+    let collection = get_collection::<MeetingConfig>(db_pool, "meeting_configs").await;
+
+    let configs = collection.find(doc!{}, None).await.unwrap().try_collect::<Vec<MeetingConfig>>().await;
+
+    match configs {
+        Ok(configs) => Ok(Json(configs)),
+        Err(_) => Err(Status::InternalServerError)
     }
 }
