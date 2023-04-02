@@ -13,6 +13,8 @@ pub struct Meeting {
     id: Option<ObjectId>,
     /// Real duration of the meeting in seconds (max 65535)
     duration: u16,
+    /// Id of the Meeting Configuration associated
+    config_id: Option<ObjectId>,
     /// Date and time when the meeting started
     #[serde(with = "ts_milliseconds")]
     date_utc: DateTime<Utc>,

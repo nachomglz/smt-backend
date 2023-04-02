@@ -1,3 +1,14 @@
+# [02-04-2023] 0.1.8
+
+## Changed
+
+- Meeting configs now have a config_name instead of meeting_name, as the config will be saved as a template to create new meetins.
+
+## Added
+
+- Endpoint to retrieve all of the configs in the application
+
+
 # [26-03-2023] 0.1.7
 
 ## Added
