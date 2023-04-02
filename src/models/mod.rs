@@ -35,7 +35,8 @@ pub fn mount(rocket: rocket::Rocket<Build>) -> rocket::Rocket<Build> {
                 meeting_config::create,
                 meeting_config::get,
                 meeting_config::update,
-                meeting_config::delete
+                meeting_config::delete,
+                meeting_config::all
             ],
         )
         .mount(
