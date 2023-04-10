@@ -207,3 +207,21 @@ pub async fn all(db_pool: &State<Pool>) -> Result<Json<Vec<MeetingConfig>>, Stat
         Err(_) => Err(Status::InternalServerError)
     }
 }
+
+#[rocket::get("/team/<team_id>")]
+pub async fn team(db_pool: &State<Pool>, team_id: String) -> Result<Response<Vec<MeetingConfig>>,Status> {
+    let collection = get_collection::<MeetingConfig>(db_pool, "meeting_configs").await;
+
+    let team_id = match ObjectId::parse_str(team_id) {
+        Ok(id) => id,
+        Err(_) => return Err(Status::UnprocessableEntity)
+    };
+
+    let configs = collection.find(doc!{ "team_id": team_id }, None).await.unwrap().try_collect::<Vec<MeetingConfig>>().await;
+
+    match configs {
+        Ok(configs) => Ok(Response::Success(Json(configs))),
+        Err(_) => Err(Status::InternalServerError)
+    }
+}
+

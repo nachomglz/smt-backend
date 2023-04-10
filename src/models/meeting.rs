@@ -12,36 +12,53 @@ pub struct Meeting {
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
     id: Option<ObjectId>,
     /// Real duration of the meeting in seconds (max 65535)
-    duration: u16,
-    /// Id of the Meeting Configuration associated
+    duration: Option<u16>,
+    /// Id of the Meeting Configuration associated (if it has one)
     config_id: Option<ObjectId>,
     /// Date and time when the meeting started
     #[serde(with = "ts_milliseconds")]
     date_utc: DateTime<Utc>,
 }
 
-#[rocket::post("/", format = "json", data = "<meeting>")]
+impl Meeting {
+    pub fn new() -> Meeting {
+        Meeting {
+            id: None,
+            duration: Some(0),
+            config_id: None,
+            date_utc: Utc::now()
+        }
+    }
+}
+
+#[rocket::post("/<config_id>")]
 pub async fn create(
     db_pool: &State<Pool>,
-    meeting: Json<Meeting>,
+    config_id: String
 ) -> Result<Response<Meeting>, Status> {
     let collection = get_collection::<Meeting>(db_pool, "meetings").await;
 
-    let mut new_meeting = meeting.0.clone();
+    let config_id = match ObjectId::parse_str(config_id) {
+        Ok(id) => id,
+        Err(_) => return Err(Status::UnprocessableEntity)
+    };
 
+    let mut new_meeting = Meeting::new();
+
+    new_meeting.date_utc = Utc::now();
+    new_meeting.config_id = Some(config_id);
+    
+    // insert the new meeting in the db
     let result = collection.insert_one(&new_meeting, None).await;
 
     match result {
         Ok(result) => {
-            let id = result.inserted_id;
-            new_meeting.id = Some(id.as_object_id().unwrap());
+            new_meeting.id = Some(result.inserted_id.as_object_id().unwrap());
             Ok(Response::Created(Json(new_meeting)))
-        }
-        Err(error) => {
-            eprintln!("[INSERT][MEETING] ~ {}", error);
-            Err(Status::InternalServerError)
-        }
+        },
+        Err(_) => Err(Status::InternalServerError)
     }
+
 }
 
 #[rocket::get("/<meeting_id>")]

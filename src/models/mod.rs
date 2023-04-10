@@ -28,15 +28,22 @@ pub fn mount(rocket: rocket::Rocket<Build>) -> rocket::Rocket<Build> {
                 team::all
             ],
         )
-        .mount("/api/meeting", routes![meeting::create, meeting::get])
+        .mount(
+            "/api/meeting",
+            routes![
+                meeting::create,
+                meeting::get
+            ],
+        )
         .mount(
             "/api/meeting_config",
             routes![
                 meeting_config::create,
+                meeting_config::all,
                 meeting_config::get,
                 meeting_config::update,
                 meeting_config::delete,
-                meeting_config::all
+                meeting_config::team
             ],
         )
         .mount(
